@@ -14,7 +14,10 @@ SUDO=""
 if [[ $EUID -ne 0 ]]; then SUDO="sudo"; fi
 
 log() { printf "%s\n" "$*" | tee -a "$REPORT" >/dev/null; }
-hdr() { printf "\n===== %s =====\n" "$1" | tee -a "$REPORT" >/dev/null; }
+hdr() { 
+  printf "\n===== %s =====\n" "$1" | tee -a "$REPORT" >/dev/null
+  echo "[$(date '+%H:%M:%S')] Processing: $1" >&2
+}
 cmd() {
   echo "\$ $*" | tee -a "$REPORT" >/dev/null
   eval "$*" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | tee -a "$REPORT" >/dev/null || true
@@ -53,6 +56,9 @@ ACTIVE_SSH_CONN="$($SUDO ss -Htan state established '( sport = :22 )' 2>/dev/nul
 
 # HEADER
 : > "$REPORT"
+echo "[$(date '+%H:%M:%S')] Starting CentOS/Rocky Linux 24h Security Audit..." >&2
+echo "[$(date '+%H:%M:%S')] Report will be saved to: $REPORT" >&2
+echo "[$(date '+%H:%M:%S')] Extracting SSH log data..." >&2
 hdr "CentOS/Rocky Linux 24h Security Check (READ-ONLY)"
 log "Host        : $(hostname -f 2>/dev/null || hostname)"
 log "OS Info     : $(cat /etc/redhat-release 2>/dev/null || echo 'Unknown RHEL-based')"
@@ -263,3 +269,5 @@ fi
 hdr "END OF REPORT"
 log ""
 log "Saved report to: $REPORT"
+echo "[$(date '+%H:%M:%S')] ✅ Security audit completed successfully!" >&2
+echo "[$(date '+%H:%M:%S')] 📄 Full report saved to: $REPORT" >&2
